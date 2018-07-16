@@ -1,0 +1,63 @@
+'//////////////////////////////////////////////////////////////////////////////
+'//////////////////////////////// EstQuelJour /////////////////////////////////
+'//////////////////////////////////////////////////////////////////////////////
+' objectif : savoir si une date est un jour férié et quel jour de la semaine
+' paramètres : p_Date$: la date au format JJ/MM/AAAA
+' retour : combinaison binaire : (jour & 7)= lu=1 ma=2 me=3 jeu=4 ve=5 sa=6 di=7,(férié & 8)=8
+'//////////////////////////////////////////////////////////////////////////////
+function EstQuelJour( p_Date$ )
+ local fn_jourannee, fn_index, fn_bissextille, fn_nbele, fn_annee, fn_retour
+ local fn_valeur$
+
+ fn_index=weekday()+6
+ if fn_index=7 then fn_index=13 endif
+ fn_nbele=DateBetween("d",date$(),p_Date$) ' jour de l'année
+
+ if fn_nbele<0 then ' date inférieure à aujourdhui
+  fn_nbele=-1*fn_nbele
+  fn_nbele=(fn_index-( fn_nbele mod 7 ) ) mod 7
+ else
+  fn_nbele=(( fn_nbele mod 7 ) + fn_index ) mod 7
+ endif
+ if fn_nbele=0 then ' dimanche
+  fn_nbele=7
+ endif
+ fn_retour=fn_nbele
+ fn_index=instrrev(p_Date$,"/")
+ fn_valeur$=right$(p_Date$,len(p_Date$)-fn_index)
+ fn_annee=val(fn_valeur$) ' valeur de l'année
+ if fn_annee<2000 then ' au cas où
+  fn_annee=fn_annee+2000
+ endif
+ fn_bissextille=DateBetween("y","01/01/"+fn_valeur$,"01/03/"+fn_valeur$)-59 ' si=1 alors année bissextille
+ fn_jourannee=DateBetween("y","01/01/"+fn_valeur$,p_Date$) ' jour de l'année
+ if fn_jourannee=0 then ' jour de l'an
+  EstQuelJour=fn_retour+8
+  exitfunction
+ endif
+ ' calcul de la date de Pâques
+ fn_index=((fn_annee mod 19)*19+24) mod 30
+ fn_nbele=(2*(fn_annee mod 4)+4*(fn_annee mod 7)+6*fn_index+5) mod 7
+ if fn_index+fn_nbele-9=26 then
+  fn_index=109
+ else
+  fn_index=81+fn_index+fn_nbele
+ endif
+ ' lundi paques, ascension, lundi pentecote
+ fn_valeur$=","+str$(fn_index)+","+str$(fn_index+38)+","+str$(fn_index+49)
+ ' 1/5, 14/7, 15/8, 1/11, 11/11, 25/12
+ fn_valeur$="120,127,194,226,304,314,358"+fn_valeur$
+ tab1$()=""
+ fn_nbele=-1
+ fn_nbele=splitintoarray(fn_valeur$,tab1$(),",")
+ fn_index=0
+ while fn_index<fn_nbele
+  if fn_jourannee=val(tab1$(fn_index))+fn_bissextille then
+   EstQuelJour=fn_retour+8
+   exitfunction
+  endif
+  fn_index=fn_index+1
+ wend
+ EstQuelJour=fn_retour
+ 'msgbox(fn_valeur$,,str$(fn_jourannee))
+endfunction 
