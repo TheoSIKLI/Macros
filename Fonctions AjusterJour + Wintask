@@ -1,0 +1,34 @@
+'//////////////////////////////////////////////////////////////////////////////
+'//////////////////////////////// AjusterJour$ ////////////////////////////////
+'//////////////////////////////////////////////////////////////////////////////
+' objectif : ajuster une date hors WE et JF
+' paramètres :  p_Date$: la date au format JJ/MM/AAAA, 
+'    p_Interval$: type d'interval (idem que ceux utilisés dans DateToDAte$)
+'             p_Combien: combien d'interval, 
+'    p_Sens: (1 ou -1) sens d'ajustement pour WE et JF (1 = 1er jour ouvré APRES le jour non ouvré, -1 = 1er jour ouvré AVANT le jour non ouvré)
+' retour : date ajusté
+'//////////////////////////////////////////////////////////////////////////////
+function AjusterJour$( p_Date$ , p_Interval$ , p_Combien , p_Sens )
+ local fn_ret
+ local fn_date$
+
+ if DateToDate$("d" , 1 , p_Date$)=p_Date$ then
+  AjusterJour$=p_Date$
+  exitfunction
+ endif
+ 
+ if instr("-d-ww-yyyy-q-m" , "-"+p_Interval$+"-")>0 and p_Combien<>0 then
+  fn_date$=DateToDate$(p_Interval$ , p_Combien , p_Date$)
+ else
+  fn_date$=p_Date$
+ endif
+
+ repeat
+  fn_ret=EstQuelJour( fn_date$ )
+  if fn_ret>5 then
+   fn_date$=DateToDate$("d" , p_Sens , fn_date$)
+  endif
+ until fn_ret<6
+
+ AjusterJour$=fn_date$
+endfunction
